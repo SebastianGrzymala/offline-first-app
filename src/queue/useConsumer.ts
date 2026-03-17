@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { sendLargeMessage, sendSmallMessage } from "../api";
+import { useLoggerStore } from "../logger/useLoggerStore";
 import { useHighPriorityQueueStore } from "./useHighPriorityQueueStore";
 import { useLowPriorityQueueStore } from "./useLowPriorityQueueStore";
 
@@ -18,13 +19,17 @@ export const useConsumer = () => {
   const removeLargeItemById = useLowPriorityQueueStore(
     (state) => state.removeById,
   );
+
   const [retryTrigger, setRetryTrigger] = useState(0);
+
+  const addLog = useLoggerStore((state) => state.addLog);
 
   useEffect(() => {
     if (smallItemToProceed) {
       sendSmallMessage(smallItemToProceed.payload)
         .then(() => {
           removeSmallItemById(smallItemToProceed.id);
+          addLog("SMALL");
         })
         .catch((error) => {
           setTimeout(() => setRetryTrigger((prev) => prev + 1), RETRY_DELAY);
@@ -33,6 +38,7 @@ export const useConsumer = () => {
       sendLargeMessage(largeItemToProceed.payload)
         .then(() => {
           removeLargeItemById(largeItemToProceed.id);
+          addLog("LARGE");
         })
         .catch((error) => {
           setTimeout(() => setRetryTrigger((prev) => prev + 1), RETRY_DELAY);
@@ -44,5 +50,6 @@ export const useConsumer = () => {
     removeSmallItemById,
     removeLargeItemById,
     retryTrigger,
+    addLog,
   ]);
 };

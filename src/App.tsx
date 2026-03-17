@@ -1,40 +1,26 @@
-import { Button, StyleSheet, Text, View } from "react-native";
-import {
-  useConsumer,
-  useHighPriorityStore,
-  useLowPriorityStore,
-} from "./queue";
+import { StyleSheet } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { Buttons } from "./components/Buttons";
+import { Logs } from "./components/Logs";
+import { useConsumer } from "./queue";
 
 export default function App() {
-  const addSmallItem = useHighPriorityStore((state) => state.addItem);
-  const smallItemsCount = useHighPriorityStore((state) => state.items.length);
-  const addLargeItem = useLowPriorityStore((state) => state.addItem);
-  const largeItemsCount = useLowPriorityStore((state) => state.items.length);
-
-  const handleSmallPress = () => {
-    addSmallItem({ id: Date.now().toString(), payload: "small" });
-  };
-
-  const handleLargePress = () => {
-    addLargeItem({ id: Date.now().toString(), payload: "large" });
-  };
-
   useConsumer();
 
   return (
-    <View style={styles.container}>
-      <Button title={`Small`} onPress={handleSmallPress} />
-      <Text>Pending items: {smallItemsCount}</Text>
-      <Button title={"Large"} onPress={handleLargePress} />
-      <Text>Pending items: {largeItemsCount}</Text>
-    </View>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <Buttons />
+        <Logs />
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    gap: 30,
+    paddingHorizontal: 30,
   },
 });
