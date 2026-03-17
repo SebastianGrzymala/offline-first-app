@@ -1,5 +1,9 @@
 import { Button, StyleSheet, Text, View } from "react-native";
-import { useHighPriorityStore, useLowPriorityStore } from "./queue";
+import {
+  useConsumer,
+  useHighPriorityStore,
+  useLowPriorityStore,
+} from "./queue";
 
 export default function App() {
   const addSmallItem = useHighPriorityStore((state) => state.addItem);
@@ -14,6 +18,8 @@ export default function App() {
   const handleLargePress = () => {
     addLargeItem({ id: Date.now().toString(), payload: "large" });
   };
+
+  useConsumer();
 
   return (
     <View style={styles.container}>

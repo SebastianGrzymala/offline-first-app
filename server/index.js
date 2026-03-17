@@ -10,10 +10,13 @@ const server = http.createServer((req, res) => {
       const time = new Date().toISOString();
       const length = body.length;
       console.log(`received a message at ${time} with length ${length} bytes`);
-      setTimeout(() => {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ success: true }));
-      }, 500);
+      setTimeout(
+        () => {
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: true }));
+        },
+        200 + Math.random() * 500, // The timeout is now randomly between 200ms and 700ms.
+      );
     });
   } else {
     res.writeHead(404);
