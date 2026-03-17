@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button, StyleSheet, Text, View } from "react-native";
 import { useHighPriorityStore, useLowPriorityStore } from "../queue";
 
@@ -6,13 +7,23 @@ export const Buttons = () => {
   const smallItemsCount = useHighPriorityStore((state) => state.items.length);
   const addLargeItem = useLowPriorityStore((state) => state.addItem);
   const largeItemsCount = useLowPriorityStore((state) => state.items.length);
+  const [smallCounter, setSmallCounter] = useState(0);
+  const [largeCounter, setLargeCounter] = useState(0);
 
   const handleSmallPress = () => {
-    addSmallItem({ id: Date.now().toString(), payload: "small" });
+    setSmallCounter((prev) => prev + 1);
+    addSmallItem({
+      id: Date.now().toString(),
+      payload: `small ${smallCounter + 1}`,
+    });
   };
 
   const handleLargePress = () => {
-    addLargeItem({ id: Date.now().toString(), payload: "large" });
+    setLargeCounter((prev) => prev + 1);
+    addLargeItem({
+      id: Date.now().toString(),
+      payload: `large ${largeCounter + 1}`,
+    });
   };
 
   return (

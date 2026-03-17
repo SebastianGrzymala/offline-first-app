@@ -1,7 +1,5 @@
 import { create } from "zustand";
 
-type TactionType = "SMALL" | "LARGE";
-
 type LogEntry = {
   timestamp: string;
   payload: string;
@@ -9,7 +7,8 @@ type LogEntry = {
 
 type LoggerStore = {
   logs: LogEntry[];
-  addLog: (payload: TactionType) => void;
+  addLog: (payload: string) => void;
+  clearLogs: () => void;
 };
 
 export const useLoggerStore = create<LoggerStore>()((set) => ({
@@ -17,8 +16,9 @@ export const useLoggerStore = create<LoggerStore>()((set) => ({
   addLog: (payload) =>
     set((state) => ({
       logs: [
-        ...state.logs,
         { timestamp: new Date().toISOString(), payload },
+        ...state.logs,
       ].slice(0, 100),
     })),
+  clearLogs: () => set({ logs: [] }),
 }));

@@ -25,29 +25,34 @@ export const useConsumer = () => {
   const addLog = useLoggerStore((state) => state.addLog);
 
   useEffect(() => {
-    if (smallItemToProceed) {
-      sendSmallMessage(smallItemToProceed.payload)
-        .then(() => {
-          removeSmallItemById(smallItemToProceed.id);
-          addLog("SMALL");
-        })
-        .catch((error) => {
-          setTimeout(() => setRetryTrigger((prev) => prev + 1), RETRY_DELAY);
-        });
-    } else if (largeItemToProceed) {
-      sendLargeMessage(largeItemToProceed.payload)
-        .then(() => {
-          removeLargeItemById(largeItemToProceed.id);
-          addLog("LARGE");
-        })
-        .catch((error) => {
-          setTimeout(() => setRetryTrigger((prev) => prev + 1), RETRY_DELAY);
-        });
+    if (!smallItemToProceed) {
+      return;
     }
+    sendSmallMessage(smallItemToProceed.payload)
+      .then(() => {
+        removeSmallItemById(smallItemToProceed.id);
+        addLog(JSON.stringify(smallItemToProceed.payload));
+      })
+      .catch((error) => {
+        setTimeout(() => setRetryTrigger((prev) => prev + 1), RETRY_DELAY);
+      });
+  }, [smallItemToProceed, removeSmallItemById, retryTrigger, addLog]);
+
+  useEffect(() => {
+    if (smallItemToProceed || !largeItemToProceed) {
+      return;
+    }
+    sendLargeMessage(largeItemToProceed.payload)
+      .then(() => {
+        removeLargeItemById(largeItemToProceed.id);
+        addLog(JSON.stringify(largeItemToProceed.payload));
+      })
+      .catch((error) => {
+        setTimeout(() => setRetryTrigger((prev) => prev + 1), RETRY_DELAY);
+      });
   }, [
     smallItemToProceed,
     largeItemToProceed,
-    removeSmallItemById,
     removeLargeItemById,
     retryTrigger,
     addLog,
