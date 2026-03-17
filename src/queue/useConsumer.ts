@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useNetInfoInstance } from "@react-native-community/netinfo";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { sendLargeMessage, sendSmallMessage } from "../api";
 import { useLoggerStore } from "../logger/useLoggerStore";
 import { useHighPriorityQueueStore } from "./useHighPriorityQueueStore";
@@ -7,6 +8,13 @@ import { useLowPriorityQueueStore } from "./useLowPriorityQueueStore";
 const RETRY_DELAY = 5000; // 5 seconds
 
 export const useConsumer = () => {
+  const {
+    netInfo: { isConnected },
+  } = useNetInfoInstance();
+
+  const [retryTrigger, setRetryTrigger] = useState(0);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const smallItemToProceed = useHighPriorityQueueStore(
     (state) => state.items?.[0],
   );
@@ -20,12 +28,26 @@ export const useConsumer = () => {
     (state) => state.removeById,
   );
 
-  const [retryTrigger, setRetryTrigger] = useState(0);
-
   const addLog = useLoggerStore((state) => state.addLog);
 
+  const retry = useCallback(() => {
+    retryTimeoutRef.current = setTimeout(
+      () => setRetryTrigger((prev) => prev + 1),
+      RETRY_DELAY,
+    );
+  }, []);
+
+  // Clear timeout on unmount
   useEffect(() => {
-    if (!smallItemToProceed) {
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!smallItemToProceed || !isConnected) {
       return;
     }
     sendSmallMessage(smallItemToProceed.payload)
@@ -34,12 +56,20 @@ export const useConsumer = () => {
         addLog(JSON.stringify(smallItemToProceed.payload));
       })
       .catch((error) => {
-        setTimeout(() => setRetryTrigger((prev) => prev + 1), RETRY_DELAY);
+        retry();
+        console.error(error);
       });
-  }, [smallItemToProceed, removeSmallItemById, retryTrigger, addLog]);
+  }, [
+    smallItemToProceed,
+    removeSmallItemById,
+    retryTrigger,
+    addLog,
+    isConnected,
+    retry,
+  ]);
 
   useEffect(() => {
-    if (smallItemToProceed || !largeItemToProceed) {
+    if (smallItemToProceed || !largeItemToProceed || !isConnected) {
       return;
     }
     sendLargeMessage(largeItemToProceed.payload)
@@ -48,7 +78,8 @@ export const useConsumer = () => {
         addLog(JSON.stringify(largeItemToProceed.payload));
       })
       .catch((error) => {
-        setTimeout(() => setRetryTrigger((prev) => prev + 1), RETRY_DELAY);
+        retry();
+        console.error(error);
       });
   }, [
     smallItemToProceed,
@@ -56,5 +87,7 @@ export const useConsumer = () => {
     removeLargeItemById,
     retryTrigger,
     addLog,
+    isConnected,
+    retry,
   ]);
 };
