@@ -1,10 +1,11 @@
 import { Button, StyleSheet, View } from "react-native";
+import { sendLargeMessage, sendSmallMessage } from "./api";
 
 export default function App() {
   return (
     <View style={styles.container}>
-      <Button title={"Small"} />
-      <Button title={"Large"} />
+      <Button title={"Small"} onPress={() => sendSmallMessage("small")} />
+      <Button title={"Large"} onPress={() => sendLargeMessage("large")} />
     </View>
   );
 }
