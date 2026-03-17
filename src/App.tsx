@@ -22,5 +22,6 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 30,
     paddingHorizontal: 30,
+    backgroundColor: "#fff",
   },
 });
