@@ -74,3 +74,4 @@ All successful requests are logged. Messages that succeed on the first attempt a
 - The queue is processed FIFO (First In, First Out). For some use cases LIFO (Last In, First Out) may be preferable — for example, when sending user location data, the most recent position should take priority.
 - AsyncStorage can be replaced with [MMKV](https://github.com/mrousavy/react-native-mmkv) for better performance.
 - Currently, queued messages are flushed sequentially. A parallel flush with a configurable concurrency limit could improve throughput.
+- It's not safe to use `Date.now().toString()` as id. We should not do that in production.
