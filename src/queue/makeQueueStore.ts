@@ -2,15 +2,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-type QueueItem = {
+type Message = {
   id: string;
-  payload: unknown;
+  url: string;
+  method: string;
+  data: unknown;
 };
 
 type QueueStore = {
-  items: QueueItem[];
-  addItem: (item: QueueItem) => void;
-  removeById: (id: string) => void;
+  messages: Message[];
+  addMessage: (message: Message) => void;
+  removeMessage: (id: string) => void;
 };
 
 // Factory function to create a queue store with persistence
@@ -18,11 +20,12 @@ export const makeQueueStore = (storageKey: string) =>
   create<QueueStore>()(
     persist(
       (set) => ({
-        items: [],
-        addItem: (item) => set((state) => ({ items: [...state.items, item] })),
-        removeById: (id) =>
+        messages: [],
+        addMessage: (message) =>
+          set((state) => ({ messages: [...state.messages, message] })),
+        removeMessage: (id) =>
           set((state) => ({
-            items: state.items.filter((item) => item.id !== id),
+            messages: state.messages.filter((item) => item.id !== id),
           })),
       }),
       {

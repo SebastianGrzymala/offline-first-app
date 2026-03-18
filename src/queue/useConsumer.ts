@@ -1,7 +1,6 @@
 import { useNetInfoInstance } from "@react-native-community/netinfo";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { sendLargeMessage, sendSmallMessage } from "../api";
-import { useLoggerStore } from "../logger/useLoggerStore";
+import { api, DELAYED_MESSAGE_HEADER } from "../api/client";
 import { useHighPriorityQueueStore } from "./useHighPriorityQueueStore";
 import { useLowPriorityQueueStore } from "./useLowPriorityQueueStore";
 
@@ -15,20 +14,17 @@ export const useConsumer = () => {
   const [retryTrigger, setRetryTrigger] = useState(0);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const smallItemToProceed = useHighPriorityQueueStore(
-    (state) => state.items?.[0],
+  const smallMessage = useHighPriorityQueueStore(
+    (state) => state.messages?.[0],
   );
-  const largeItemToProceed = useLowPriorityQueueStore(
-    (state) => state.items?.[0],
-  );
-  const removeSmallItemById = useHighPriorityQueueStore(
-    (state) => state.removeById,
-  );
-  const removeLargeItemById = useLowPriorityQueueStore(
-    (state) => state.removeById,
-  );
+  const largeMessage = useLowPriorityQueueStore((state) => state.messages?.[0]);
 
-  const addLog = useLoggerStore((state) => state.addLog);
+  const removeSmallMessage = useHighPriorityQueueStore(
+    (state) => state.removeMessage,
+  );
+  const removeLargeMessage = useLowPriorityQueueStore(
+    (state) => state.removeMessage,
+  );
 
   const retry = useCallback(() => {
     retryTimeoutRef.current = setTimeout(
@@ -46,47 +42,61 @@ export const useConsumer = () => {
     };
   }, []);
 
+  // Effect to process small messages
   useEffect(() => {
-    if (!smallItemToProceed || !isConnected) {
+    if (!smallMessage || !isConnected) {
       return;
     }
-    sendSmallMessage(smallItemToProceed.payload)
-      .then(() => {
-        removeSmallItemById(smallItemToProceed.id);
-        addLog(JSON.stringify(smallItemToProceed.payload));
-      })
-      .catch((error) => {
-        retry();
-        console.error(error);
-      });
-  }, [
-    smallItemToProceed,
-    removeSmallItemById,
-    retryTrigger,
-    addLog,
-    isConnected,
-    retry,
-  ]);
 
+    api({
+      method: smallMessage.method,
+      url: smallMessage.url,
+      data: smallMessage.data,
+      headers: { [DELAYED_MESSAGE_HEADER]: smallMessage.id },
+    })
+      .then(() => {
+        removeSmallMessage(smallMessage.id);
+      })
+      .catch((error) => {
+        retry();
+        console.error(error);
+      });
+  }, [smallMessage, removeSmallMessage, retryTrigger, isConnected, retry]);
+
+  // Effect to process large messages
   useEffect(() => {
-    if (smallItemToProceed || !largeItemToProceed || !isConnected) {
+    if (smallMessage || !largeMessage || !isConnected) {
       return;
     }
-    sendLargeMessage(largeItemToProceed.payload)
+
+    const formData = new FormData();
+    Object.entries(largeMessage.data as Record<string, unknown>).forEach(
+      ([key, value]) => {
+        formData.append(key, value as string);
+      },
+    );
+
+    api({
+      method: largeMessage.method,
+      url: largeMessage.url,
+      data: formData,
+      headers: {
+        [DELAYED_MESSAGE_HEADER]: largeMessage.id,
+        "Content-Type": "multipart/form-data",
+      },
+    })
       .then(() => {
-        removeLargeItemById(largeItemToProceed.id);
-        addLog(JSON.stringify(largeItemToProceed.payload));
+        removeLargeMessage(largeMessage.id);
       })
       .catch((error) => {
         retry();
         console.error(error);
       });
   }, [
-    smallItemToProceed,
-    largeItemToProceed,
-    removeLargeItemById,
+    smallMessage,
+    largeMessage,
+    removeLargeMessage,
     retryTrigger,
-    addLog,
     isConnected,
     retry,
   ]);

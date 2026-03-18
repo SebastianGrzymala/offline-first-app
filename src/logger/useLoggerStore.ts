@@ -2,23 +2,23 @@ import { create } from "zustand";
 
 type LogEntry = {
   timestamp: string;
-  payload: string;
+  message: string;
 };
 
 type LoggerStore = {
-  logs: LogEntry[];
-  addLog: (payload: string) => void;
+  messages: LogEntry[];
+  addMessage: (message: string) => void;
   clearLogs: () => void;
 };
 
 export const useLoggerStore = create<LoggerStore>()((set) => ({
-  logs: [],
-  addLog: (payload) =>
+  messages: [],
+  addMessage: (message) =>
     set((state) => ({
-      logs: [
-        { timestamp: new Date().toISOString(), payload },
-        ...state.logs,
+      messages: [
+        { timestamp: new Date().toISOString(), message },
+        ...state.messages,
       ].slice(0, 100),
     })),
-  clearLogs: () => set({ logs: [] }),
+  clearLogs: () => set({ messages: [] }),
 }));
