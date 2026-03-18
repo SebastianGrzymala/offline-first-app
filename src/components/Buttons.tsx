@@ -26,10 +26,14 @@ export const Buttons = () => {
 
   return (
     <View style={styles.container}>
-      <Button title={`Small`} onPress={handleSmallPress} />
-      <Text>Pending items: {smallMessagesCount}</Text>
-      <Button title={"Large"} onPress={handleLargePress} />
-      <Text>Pending items: {largeMessagesCount}</Text>
+      <View>
+        <Button title={`Small`} onPress={handleSmallPress} />
+        <Text>Pending messages: {smallMessagesCount}</Text>
+      </View>
+      <View>
+        <Button title={"Large"} onPress={handleLargePress} />
+        <Text>Pending messages: {largeMessagesCount}</Text>
+      </View>
     </View>
   );
 };
@@ -37,5 +41,6 @@ export const Buttons = () => {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
+    gap: 15,
   },
 });
